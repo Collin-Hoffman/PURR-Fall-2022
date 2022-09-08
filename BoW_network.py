@@ -15,6 +15,7 @@ from operator import itemgetter
 import requests
 import regex
 from bs4 import BeautifulSoup as soup
+from math import log
 
 #read in data
 tags_df = pd.read_csv('bag_of_words(1).csv')
@@ -45,8 +46,8 @@ sorted_nodes = sorted(node_info, key = itemgetter(2), reverse = True)
 
 def simple_func(): 
   #create graph as an instance of a Pyvis network
-  nx_graph = Network('500px', '500px', notebook = True, heading='') #array of three particles made, index starts at 0
-  st.markdown("<h1 style = 'font-size: 100px;'> </h1>")
+  nx_graph = Network(height="1000px", width = "100%", notebook = True, heading='') #array of three particles made, index starts at 0
+  st.markdown("<h1 style = 'font-size: 50px;'> </h1>", unsafe_allow_html= True)
   
   
   #create empty master and sub list
@@ -79,7 +80,7 @@ def simple_func():
   for initial in range(0, 200):
           
      tag = sorted_nodes[initial][0]
-     node_size = sorted_nodes[initial][2]
+     node_size = 10* log(sorted_nodes[initial][2])
      # nx_graph.add_node(tag, tag, title = tag, size = node_size)
      
      #for each of the top 200 nodes, add search term
@@ -88,13 +89,13 @@ def simple_func():
      tag_plus = regex.sub("_", "+", tag)
      
      #HTML parse, get search results
-     site_raw = requests.get("https://purr.lib.purdue.edu/registry?q=" + tag_plus, verify = False)
-     site_soup = soup(site_raw.text, 'html.parser')
+     #site_raw = requests.get("https://purr.lib.purdue.edu/registry?q=" + tag_plus, verify = False)
+     #site_soup = soup(site_raw.text, 'html.parser')
      #site_info = site_soup.find("p", {"class": "ml-2 mt-3"})
      #results = regex.compile("(<p class=\"ml-2 mt-3\">)\s*((Results[\s\w-]+)|(No record found\s+))(<\/p>)") #regex that finds count of results
+     link = "https://purr.lib.purdue.edu/registry?q=" + tag_plus
+     hyperlink = "<a href="+link+">View the link for " + tag_plus + "</a>" 
      
-        
-     hyperlink = "<a href="+tag_plus+">View results for: " + tag + "</a>" #link for highlighting
      nx_graph.add_node(tag, tag, title = hyperlink, size = node_size)
   
   #get information for nodes, including source and source location
@@ -146,6 +147,7 @@ def simple_func():
   
     '''
   #show the graph at the end
-  nx_graph.show_buttons(filter_=["physics"])
+  #turn off the physics option
+  nx_graph.barnes_hut(gravity = -36000, central_gravity = 0, spring_length = 500, spring_strength = 0.04)
   nx_graph.show('BoW.html')
   
